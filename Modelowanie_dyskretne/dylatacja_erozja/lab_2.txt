@@ -1,0 +1,82 @@
+package com.company;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String[] args) throws IOException {
+        File file = new File("C:\\Users\\user\\Desktop\\Studia\\Semestr V\\Modelowanie dyskretne\\Laboratoria\\erozjaDylatacja\\src\\zbin.txt");
+        Scanner sc = new Scanner(file);
+
+        int[][] arr=new int[600][330];
+
+        for (int y=0; y<330; y++)
+            for(int x=0; x<600;x++)
+                arr[x][y]=sc.nextInt();
+                //System.out.print(arr[x][y]+" ");
+
+        erozjaDylatacja(arr);
+
+        PrintWriter result=new PrintWriter("C:\\Users\\user\\Desktop\\Studia\\Semestr V\\Modelowanie dyskretne\\Laboratoria\\erozjaDylatacja\\src\\Result.txt");
+        for (int y=0; y<330; y++) {
+            for (int x = 0; x < 600; x++) {
+                if (x!=0)
+                    result.print("\t");
+                result.print(arr[x][y]);
+            }
+            result.println();
+        }
+        result.close();
+
+        BufferedImage paintImg = new BufferedImage(600, 330, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = paintImg.createGraphics();
+
+        for(int dy = 0; dy < 330; dy++){
+            for(int dx = 0; dx < 600; dx++){
+                g.setColor(new Color(arr[dx][dy], arr[dx][dy], arr[dx][dy]));
+                g.fillRect(dx, dy, 1, 1);
+            }
+        }
+
+        ImageIO.write(paintImg, "png", new File("output.bmp"));
+
+        g.dispose();
+    }
+
+    static void erozjaDylatacja( int [][] tab){
+        int sum=0;
+        int[][] check=new int[tab.length][tab.length];
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("'d' - dylatacja\n 'e' - erozja\n");
+        char choice=sc.next().charAt(0);
+
+        for(int i=0; i<330; i++) {
+            for (int j=0; j<600;j++) {
+                check[j][i] = tab[j][i];
+            }
+        }
+        for (int y=1; y<329; y++){
+            for (int x=1;x<599; x++){
+                sum = check[x-1][y-1] + check[x -1][y] + check[x-1][y+1] +
+                        check[x][y-1] + check[x][y + 1] +
+                        check[x+1][y - 1] + check[x +1][y] + check[x + 1][y +1];
+
+                if(sum>0 && choice=='d')  //dylatacja
+                        tab[x][y]=255;
+                    else if(sum<=0 && choice=='d')
+                        tab[x][y]=0;
+                    else if(sum<2040 && choice=='e') //erozja
+                        tab[x][y]=0;
+
+            }
+        }
+    }
+
+}
