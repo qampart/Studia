@@ -1,0 +1,1659 @@
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.util.Random;
+
+public class Utility {
+
+    DataManager dm;
+
+    public Utility(DataManager dm){
+
+        this.dm = dm;
+
+    }
+
+    public void bright(BufferedImage bg){
+
+        for(int i = 0; i<bg.getWidth(); i++)
+            for(int j = 0; j<bg.getHeight(); j++) {
+                Color color = new Color(bg.getRGB(i, j));
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+
+                if(r<255 && g<255 && b<255) {
+                    r += 1;
+                    g += 1;
+                    b += 1;
+                    color = new Color(r, g, b);
+                    bg.setRGB(i, j, color.getRGB());
+                }
+            }
+            }
+
+    public void dark(BufferedImage bg){
+
+        for(int i = 0; i<bg.getWidth(); i++)
+            for(int j = 0; j<bg.getHeight(); j++) {
+                Color color = new Color(bg.getRGB(i, j));
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+
+                if(r>0 && g>0 && b>0) {
+                    r -= 1;
+                    g -= 1;
+                    b -= 1;
+                    color = new Color(r, g, b);
+                    bg.setRGB(i, j, color.getRGB());
+                }
+            }
+    }
+
+    public void binary(BufferedImage bg, int b){
+
+       for(int i = 0; i<bg.getWidth(); i++)
+            for(int j = 0; j<bg.getHeight(); j++){
+
+                Color color = new Color(bg.getRGB(i,j));
+                int red = color.getRed();
+                int green = color.getGreen();
+                int blue = color.getBlue();
+                if(b<red || b<green || b<blue){
+                    red=255;
+                    green=255;
+                    blue=255;
+                } else {
+                    red=0;
+                    green=0;
+                    blue=0;
+                }
+
+                bg.setRGB(i,j,new Color(red,green,blue).getRGB());
+            }
+
+    }
+
+    public void filter(BufferedImage bg, int tab[][]){
+        for(int i=0;i<bg.getWidth();i++)
+            for(int j=0;j<bg.getHeight();j++){
+                if(i>0 && i<bg.getWidth()-1 && j>0 && j<bg.getHeight()-1){
+                    Color color = new Color(bg.getRGB(i,j));
+                    int r=0, g=0, b=0, control=0;
+                    for(int m=0;m<3;m++)
+                        for(int n=0;n<3;n++){
+                            color = new Color(bg.getRGB(i+m-1,j+n-1));
+                            r=r+color.getRed()*tab[m][n];
+                            g=g+color.getGreen()*tab[m][n];
+                            b=b+color.getBlue()*tab[m][n];
+                            control+=tab[m][n];
+                        }
+                    if(control!=0){
+                        r=r/control;
+                        g=g/control;
+                        b=b/control;
+                    }
+
+                    if(r>255) r=255;
+                    if(g>255) g=255;
+                    if(b>255) b=255;
+                    if(r<0) r=0;
+                    if(g<0) g=0;
+                    if(b<0) b=0;
+
+                    color = new Color(r,g,b);
+                    bg.setRGB(i,j,color.getRGB());
+                }
+            }
+    }
+
+    public void dilatation(BufferedImage bg){
+        int[][] matrix = new int[bg.getHeight()][bg.getWidth()];
+        Color color;
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++){
+                if(i>0 && i<bg.getHeight()-1 && j>0 && j<bg.getWidth()-1) {
+                    for (int m = 0; m < 3; m++)
+                        for (int n = 0; n < 3; n++) {
+                            if(m!=1 && n!=1){
+                                color = new Color(bg.getRGB(j + n - 1, i + m - 1));
+                                if (color.getRGB() == Color.BLACK.getRGB()) matrix[i][j]=1;
+                            }
+                        }
+                    } else if(i==0 && j==0){
+                        if(bg.getRGB(j,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                    } else if(i==0 && j==bg.getWidth()-1){
+                        if(bg.getRGB(j-1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j-1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                    } else if(i==0){
+                        if(bg.getRGB(j-1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j-1,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                    } else if(j==0 && i==bg.getHeight()-1){
+                        if(bg.getRGB(j,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                    } else if(j==0){
+                        if(bg.getRGB(j,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                    } else if(i==bg.getHeight()-1 && j==bg.getWidth()-1){
+                        if(bg.getRGB(j-1,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j-1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                    } else if(i==bg.getHeight()-1){
+                        if(bg.getRGB(j-1,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j-1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j+1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                    } else if(j==bg.getWidth()-1){
+                        if(bg.getRGB(j-1,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j-1,i)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j-1,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j,i-1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                        if(bg.getRGB(j,i+1)==Color.BLACK.getRGB()) matrix[i][j]=1;
+                    }
+
+            }
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++) if(matrix[i][j]==1) bg.setRGB(j,i,Color.BLACK.getRGB());
+
+
+    }
+
+    public void erosion(BufferedImage bg){
+        int[][] matrix = new int[bg.getHeight()][bg.getWidth()];
+        Color color;
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++){
+                if(i>0 && i<bg.getHeight()-1 && j>0 && j<bg.getWidth()-1) {
+                    for (int m = 0; m < 3; m++)
+                        for (int n = 0; n < 3; n++) {
+                            if(m!=1 && n!=1){
+                                color = new Color(bg.getRGB(j + n - 1, i + m - 1));
+                                if (color.getRGB() == Color.WHITE.getRGB()) {
+                                    matrix[i][j]=1;
+                                }
+                            }
+                        }
+                }else if(i==0 && j==0){
+                    if(bg.getRGB(j,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                } else if(i==0 && j==bg.getWidth()-1){
+                    if(bg.getRGB(j-1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j-1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                } else if(i==0){
+                    if(bg.getRGB(j-1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j-1,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                } else if(j==0 && i==bg.getHeight()-1){
+                    if(bg.getRGB(j,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                } else if(j==0){
+                    if(bg.getRGB(j,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                } else if(i==bg.getHeight()-1 && j==bg.getWidth()-1){
+                    if(bg.getRGB(j-1,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j-1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                } else if(i==bg.getHeight()-1){
+                    if(bg.getRGB(j-1,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j-1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j+1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                } else if(j==bg.getWidth()-1){
+                    if(bg.getRGB(j-1,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j-1,i)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j-1,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j,i-1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                    if(bg.getRGB(j,i+1)==Color.WHITE.getRGB()) matrix[i][j]=1;
+                }
+            }
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++) if(matrix[i][j]==1) bg.setRGB(j,i,Color.WHITE.getRGB());
+
+    }
+
+    public void changeSize(DataManager dm, int x, int y){
+
+        dm.bgImg = new BufferedImage(x, y, BufferedImage.TYPE_INT_RGB);
+
+        Color color = Color.WHITE;
+
+        for(int i=0;i<x;i++)
+            for(int j=0;j<y;j++)
+                dm.bgImg.setRGB(i,j, color.getRGB());
+
+    }
+
+    public void automaton(BufferedImage bg, int rule, int borderless){
+
+        int[] tab = new int[8];
+
+        if (rule > 127) {
+            tab[0] = 1;
+            rule = rule - 128;
+        } else tab[0] = 0;
+
+        if (rule > 63) {
+            tab[1] = 1;
+            rule = rule - 64;
+        } else tab[1] = 0;
+
+        if (rule > 31) {
+            tab[2] = 1;
+            rule = rule - 32;
+        } else tab[2] = 0;
+
+        if (rule > 15) {
+            tab[3] = 1;
+            rule = rule - 16;
+        } else tab[3] = 0;
+
+        if (rule > 7) {
+            tab[4] = 1;
+            rule = rule - 8;
+        } else tab[4] = 0;
+
+        if (rule > 3) {
+            tab[5] = 1;
+            rule = rule - 4;
+        } else tab[5] = 0;
+
+        if (rule > 1) {
+            tab[6] = 1;
+            rule = rule - 2;
+        } else tab[6] = 0;
+
+        if (rule > 0) {
+            tab[7] = 1;
+            rule = rule - 1;
+        } else tab[7] = 0;
+
+        Color colorB = Color.BLACK;
+        Color colorW = Color.WHITE;
+
+        bg.setRGB(bg.getWidth()/2,0,colorB.getRGB());
+
+        if (borderless == 0) {
+
+                for (int j = 1; j < bg.getHeight()-1; j++)
+                    for (int i = 0; i < bg.getWidth()-1; i++){
+
+                    if (i > 0 && i < bg.getWidth()) {
+                        if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[0] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[1] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[2] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[3] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[4] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[5] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[6] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[7] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        }
+                    }
+                }
+        } else if (borderless == 1) {
+
+
+                for (int j = 1; j < bg.getHeight(); j++)
+                    for (int i = 0; i < bg.getWidth(); i++){
+                        if (i == 0) {
+                        if (bg.getRGB(bg.getWidth() - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[0] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(bg.getWidth() - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[1] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(bg.getWidth() - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[2] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(bg.getWidth() - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[3] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(bg.getWidth() - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[4] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(bg.getWidth() - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[5] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(bg.getWidth() - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[6] == 1) {
+                                System.out.println("Test");
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(bg.getWidth() - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[7] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        }
+                    } else if (i == bg.getWidth()-1) {
+                        if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(0, j-1) == colorB.getRGB()) {
+                            if (tab[0] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(0, j-1) == colorW.getRGB()) {
+                            if (tab[1] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(0, j-1) == colorB.getRGB()) {
+                            if (tab[2] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(0, j-1) == colorW.getRGB()) {
+                            if (tab[3] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(0, j-1) == colorB.getRGB()) {
+                            if (tab[4] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(0, j-1) == colorW.getRGB()) {
+                            if (tab[5] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(0, j-1) == colorB.getRGB()) {
+                            if (tab[6] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(0, j-1) == colorW.getRGB()) {
+                            if (tab[7] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        }
+                    } else {
+                        if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[0] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[1] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[2] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorB.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[3] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[4] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorB.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[5] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorB.getRGB()) {
+                            if (tab[6] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        } else if (bg.getRGB(i - 1, j-1) == colorW.getRGB() && bg.getRGB(i, j-1) == colorW.getRGB() && bg.getRGB(i + 1, j-1) == colorW.getRGB()) {
+                            if (tab[7] == 1) {
+                                bg.setRGB(i, j, colorB.getRGB());
+                            } else bg.setRGB(i, j, colorW.getRGB());
+                        }
+                    }
+                }
+        }
+    }
+
+    public void moore(BufferedImage bg, Cell[][] cells){
+        int neighbors = 0;
+        Color colorW = Color.WHITE;
+        Color colorB = Color.BLACK;
+        int[][] matrix = new int[bg.getHeight()][bg.getWidth()];
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++) {
+                if(bg.getRGB(j,i)==colorB.getRGB()) matrix[i][j]=1;
+                else matrix[i][j]=0;
+            }
+
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++){
+                if(i==0 && j==0){
+                    if(bg.getRGB(bg.getWidth()-1,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(bg.getWidth()-1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(bg.getWidth()-1,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i+1)==colorB.getRGB()) neighbors++;
+
+                } else if(i==0 && j<bg.getWidth()-1){
+                    if(bg.getRGB(j-1,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i+1)==colorB.getRGB()) neighbors++;
+
+                } else if(i==0 && j==bg.getWidth()-1){
+                    if(bg.getRGB(j-1,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,i+1)==colorB.getRGB()) neighbors++;
+
+                } else if(j==0 && i<bg.getHeight()-1){
+                    if(bg.getRGB(bg.getWidth()-1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(bg.getWidth()-1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(bg.getWidth()-1,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i+1)==colorB.getRGB()) neighbors++;
+
+                } else if(i>0 && i< bg.getHeight()-1 && j>0 && j<bg.getWidth()-1){
+                    if(bg.getRGB(j-1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i+1)==colorB.getRGB()) neighbors++;
+
+                } else if(i< bg.getHeight()-1 && j==bg.getWidth()-1){
+                    if(bg.getRGB(j-1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i+1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,i+1)==colorB.getRGB()) neighbors++;
+
+                } else if(i==bg.getHeight()-1 && j==0){
+                    if(bg.getRGB(bg.getWidth()-1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(bg.getWidth()-1,bg.getHeight()-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(bg.getWidth()-1,0)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,0)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,0)==colorB.getRGB()) neighbors++;
+
+                } else if(i== bg.getHeight()-1 && j<bg.getWidth()-1){
+                    if(bg.getRGB(j-1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,0)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,0)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j+1,0)==colorB.getRGB()) neighbors++;
+
+                } else if(i==bg.getHeight()-1 && j==bg.getWidth()-1){
+                    if(bg.getRGB(j-1,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,i-1)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,i)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j-1,0)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(j,0)==colorB.getRGB()) neighbors++;
+                    if(bg.getRGB(0,0)==colorB.getRGB()) neighbors++;
+
+                }
+
+                    if(neighbors==3 && matrix[i][j]==0) matrix[i][j] = 1;
+                    else if(matrix[i][j]==1){
+                        if(neighbors>3) matrix[i][j]=0;
+                        else if(neighbors<2) matrix[i][j]=0;
+                    }
+                    neighbors = 0;
+            }
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++){
+                if(matrix[i][j]==1){
+                    bg.setRGB(j,i, colorB.getRGB());
+                    cells[i][j].status = 1;
+                }
+                else {
+                    bg.setRGB(j,i, colorW.getRGB());
+                    cells[i][j].status = 1;
+                }
+            }
+    }
+
+    public void forestStart(BufferedImage bg){
+        BufferedImage newBg = new BufferedImage(bg.getWidth(),bg.getHeight(),BufferedImage.TYPE_INT_RGB);
+        binary(bg, 128);
+        Color color;
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++){
+                color = new Color(bg.getRGB(j,i));
+                int red = color.getRed();
+                int green = color.getGreen();
+                int blue = color.getBlue();
+
+                if(red == 0 && green ==0 && blue==0){
+                    red=0;
+                    green=0;
+                    blue=255;
+                }
+                else if(red == 255 && green == 255 && blue == 255){
+                    red=0;
+                    green=255;
+                    blue=0;
+                }
+                newBg.setRGB(j,i,new Color(red, green, blue).getRGB());
+            }
+
+            dm.bgImg=newBg;
+    }
+
+    public void burnForest(BufferedImage bg, String wind, Cell[][] cells){
+        int[][] matrix = new int[bg.getHeight()][bg.getWidth()];
+        Random rand = new Random();
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++){
+                if(cells[i][j].status==0 || cells[i][j].status==2){
+                    if(i>0 && i<bg.getHeight()-1 && j>0 && j<bg.getWidth()-1) {
+                        if(bg.getRGB(j,i-1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j,i+1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                }
+                            }
+                        }
+                        if(bg.getRGB(j+1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+
+                        }
+                        if(bg.getRGB(j-1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+
+                        }
+                    }else if(i==0 && j==0){
+                        if(bg.getRGB(j,i+1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j+1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                    } else if(i==0 && j==bg.getWidth()-1){
+                        if(bg.getRGB(j-1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j,i+1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                    } else if(i==0){
+                        if(bg.getRGB(j-1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j+1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j,i+1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                    } else if(j==0 && i==bg.getHeight()-1){
+                        if(bg.getRGB(j,i-1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j+1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                    } else if(j==0){
+                        if(bg.getRGB(j,i-1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j+1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j,i+1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                    } else if(i==bg.getHeight()-1 && j==bg.getWidth()-1){
+                        if(bg.getRGB(j,i-1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j-1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                    } else if(i==bg.getHeight()-1){
+                        if(bg.getRGB(j+1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j-1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j,i-1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                    } else if(j==bg.getWidth()-1){
+                        if(bg.getRGB(j,i-1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j-1,i)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                        if(bg.getRGB(j,i+1)==Color.RED.getRGB()){
+                            if(cells[i][j].status==0){
+                                if(rand.nextInt(100)+1>70){
+                                    if(wind.equals("North")){
+                                        if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                    } else if(wind.equals("East")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("West")){
+                                        if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                    } else if(wind.equals("South")){
+                                        if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                    }
+                                }
+                            } else if(rand.nextInt(100)+1>30){
+                                if(wind.equals("North")){
+                                    if(rand.nextInt(100)+1>90) matrix[i][j]=1;
+                                } else if(wind.equals("East")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("West")){
+                                    if(rand.nextInt(100)+1>75) matrix[i][j]=1;
+                                } else if(wind.equals("South")){
+                                    if(rand.nextInt(100)+1>10) matrix[i][j]=1;
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+            }
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++){
+                if(cells[i][j].status==1){
+                    if(cells[i][j].iteration==15){
+                        cells[i][j].status=3;
+                        cells[i][j].iteration=0;
+                        bg.setRGB(j,i,Color.BLACK.getRGB());
+                    } else cells[i][j].iteration++;
+                } else if(cells[i][j].status==3){
+                    if(cells[i][j].iteration==50){
+                        if(rand.nextBoolean()){
+                            cells[i][j].status=0;
+                            bg.setRGB(j,i,Color.GREEN.getRGB());
+                        }
+                        else{
+                            cells[i][j].status=2;
+                            bg.setRGB(j,i,Color.ORANGE.getRGB());
+                        }
+                        cells[i][j].iteration=0;
+                    } else cells[i][j].iteration++;
+                }
+            }
+
+        for(int i=0;i<bg.getHeight();i++)
+            for(int j=0;j<bg.getWidth();j++) if(matrix[i][j]==1){
+                bg.setRGB(j,i,Color.RED.getRGB());
+                cells[i][j].status=1;
+            }
+    }
+
+}
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+public class Wind2 extends JFrame {
+    private JPanel panel2;
+    private JPanel win2Panel;
+    private JCanvasPanel win2Canvas;
+    private JCanvasPanel miniCanvas;
+    private JPanel winPanel;
+    private JPanel butPanel;
+
+
+    private JButton win1But;
+    private JButton sizeBut;
+    private JButton autBut;
+    private JButton rstBut;
+    private JButton livBut;
+    private JButton restBut;
+    private JButton win3But;
+
+    private JTextField xField;
+    private JTextField yField;
+    private JTextField ruleField;
+
+    private JCheckBox borderBox;
+
+    private JComboBox startStateBox;
+
+    DataManager dm, dmMini;
+    Utility util;
+
+    String[] startState = {" ", "Unchanged", "Glider", "Oscillator", "Random", "My"};
+    final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    Future<?> future;
+
+
+    public Wind2(String title){
+        super(title);
+
+        dm = new DataManager();
+        util = new Utility(dm);
+        dmMini = new DataManager();
+
+        //==============================================================================================================
+
+        win1But = new JButton("Project 1");
+        sizeBut = new JButton("Resize");
+        autBut = new JButton("Automaton");
+        rstBut = new JButton("Reset");
+        livBut = new JButton("Live");
+        restBut = new JButton("Rest");
+        win3But = new JButton("Project 3");
+
+        xField = new JTextField("300");
+        xField.setBorder(new TitledBorder("Width"));
+        yField = new JTextField("300");
+        yField.setBorder(new TitledBorder("Height"));
+        ruleField = new JTextField("90");
+        ruleField.setBorder(new TitledBorder("Rule"));
+
+        borderBox = new JCheckBox("Borderless");
+
+        startStateBox = new JComboBox(startState);
+
+        //==============================================================================================================
+
+        win1But.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MainWind mw = new MainWind("ModelowanieDyskretne1");
+
+                mw.setVisible(true);
+
+                dispose();
+            }
+        });
+
+        win3But.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                Wind3 mw = new Wind3("ModelowanieDyskretne3");
+
+                mw.setVisible(true);
+
+                dispose();
+
+            }
+        });
+
+        sizeBut.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                Utility util = new Utility(dm);
+
+                int x, y;
+                x = Integer.parseInt(xField.getText());
+                y = Integer.parseInt(yField.getText());
+
+                util.changeSize(dm, x, y);
+
+                win2Canvas.repaint();
+            }
+        });
+
+        autBut.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                Utility util = new Utility(dm);
+
+                int rule = Integer.parseInt(ruleField.getText());
+
+                if(rule>255) rule = 255;
+                if(rule<0) rule = 0;
+
+                int borderless;
+
+                if(borderBox.isSelected()) borderless = 1;
+                else borderless = 0;
+
+                util.automaton(dm.bgImg, rule, borderless);
+
+                win2Canvas.repaint();
+            }
+        });
+
+        rstBut.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                BufferedImage bg = new BufferedImage(Integer.parseInt(xField.getText()), Integer.parseInt(yField.getText()), BufferedImage.TYPE_INT_RGB);
+                Color color = Color.WHITE;
+
+
+                for(int i=0;i<Integer.parseInt(xField.getText());i++)
+                    for(int j=0;j<Integer.parseInt(yField.getText());j++)
+                        bg.setRGB(i,j, color.getRGB());
+
+
+                dm.bgImg = bg;
+
+                win2Canvas.repaint();
+            }
+        });
+
+        livBut.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Utility util = new Utility(dm);
+
+                int sizex = Integer.parseInt(xField.getText()),sizey = Integer.parseInt(yField.getText());
+
+                Cell[][] cells = new Cell[sizey][sizex];
+
+                for(int i = 0;i<dm.bgImg.getHeight();i++)
+                    for(int j=0;j<dm.bgImg.getWidth();j++){
+                        dm.bgImg.setRGB(i,j,Color.WHITE.getRGB());
+                        int m=i%100, n=j%100;
+                        if(dmMini.bgImg.getRGB(m,n)==Color.BLACK.getRGB()) {
+                            dm.bgImg.setRGB(i,j,Color.BLACK.getRGB());
+                        }
+                    }
+
+                for(int i = 0;i<sizey;i++)
+                    for(int j=0;j<sizex;j++){
+                        cells[i][j] = new Cell();
+                        if(dm.bgImg.getRGB(i,j)==Color.BLACK.getRGB()) {
+                            cells[i][j].status=2;
+                        }
+                    }
+
+                future = executorService.scheduleAtFixedRate(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        util.moore(dm.bgImg, cells);
+                        win2Canvas.repaint();
+
+                    }
+                }, 0, 100, TimeUnit.MILLISECONDS);
+
+
+
+                for(int i = 0;i<sizey;i++)
+                    for(int j=0;j<sizex;j++){
+                        cells[i][j].destroy();
+                    }
+
+
+            }
+        });
+
+        startStateBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                BufferedImage bgMini = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+                Color color = Color.WHITE;
+                Color colorB = Color.BLACK;
+
+                    for(int i=0;i<100;i++)
+                        for(int j=0;j<100;j++)
+                            bgMini.setRGB(i,j, color.getRGB());
+
+
+                if(startStateBox.getSelectedItem()=="Unchanged"){
+                    for(int i=0;i<100;i++)
+                        for(int j=0;j<100;j++) {
+                            if(i%5==2 || i%5==4) {
+                                if (j % 6 == 3 || j % 6 == 4) bgMini.setRGB(j, i, colorB.getRGB());
+                            } else if(i%5==3){
+                                if(j%6==2 || j%6==5) bgMini.setRGB(j,i, colorB.getRGB());
+                            }
+                        }
+                } else if(startStateBox.getSelectedItem()=="Glider"){
+                    for(int i=0;i<100;i++)
+                        for(int j=0;j<100;j++) {
+                            if(i%5==2) {
+                                if (j % 5 == 3 || j % 5 == 4) bgMini.setRGB(j, i, colorB.getRGB());
+                            } else if(i%5==3){
+                                if(j%5==2 || j%5==3) bgMini.setRGB(j,i, colorB.getRGB());
+                            } else if(i%5==4){
+                                if(j%5==4) bgMini.setRGB(j,i, colorB.getRGB());
+                            }
+                        }
+                } else if(startStateBox.getSelectedItem()=="Oscillator"){
+                    for(int i=0;i<100;i++)
+                        for(int j=0;j<100;j++) {
+                            if (i%9==4 || i%9==5 || i%9==6) {
+                                if (j%5==3) bgMini.setRGB(j, i, colorB.getRGB());
+                            }
+                        }
+                } else if(startStateBox.getSelectedItem()=="Random"){
+                    Random rand = new Random();
+                    for(int i=0;i<100;i++)
+                        for(int j=0;j<100;j++)
+                            if(rand.nextBoolean()) bgMini.setRGB(j, i, colorB.getRGB());
+                } else if(startStateBox.getSelectedItem()=="My"){
+                        miniCanvas.addMouseListener(new MouseListener() {
+                            @Override
+                            public void mouseClicked(MouseEvent e) {
+                                int x=e.getX(), y=e.getY();
+                                bgMini.setRGB(x, y, colorB.getRGB());
+                                miniCanvas.repaint();
+                            }
+
+                            @Override
+                            public void mousePressed(MouseEvent e) {
+                                int x=e.getX(), y=e.getY();
+                                bgMini.setRGB(x, y, colorB.getRGB());
+                                miniCanvas.repaint();
+                            }
+
+                            @Override
+                            public void mouseReleased(MouseEvent e) {
+
+                            }
+
+                            @Override
+                            public void mouseEntered(MouseEvent e) {
+
+                            }
+
+                            @Override
+                            public void mouseExited(MouseEvent e) {
+
+                            }
+                        });
+                }
+
+
+
+                dmMini.bgImg = bgMini;
+
+                miniCanvas.repaint();
+            }
+        });
+
+        restBut.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                future.cancel(true);
+            }
+        });
+
+        //==============================================================================================================
+
+
+            BufferedImage bg = new BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
+            Color color = Color.WHITE;
+
+
+            for(int i=0;i<300;i++)
+                for(int j=0;j<300;j++)
+                    bg.setRGB(i,j, color.getRGB());
+
+
+            dm.bgImg = bg;
+
+            BufferedImage bgMini = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+
+
+
+            for(int i=0;i<100;i++)
+                for(int j=0;j<100;j++)
+                    bgMini.setRGB(i,j, color.getRGB());
+
+
+            dmMini.bgImg = bgMini;
+
+
+        //==============================================================================================================
+
+        win2Canvas = new JCanvasPanel(dm);
+        miniCanvas = new JCanvasPanel(dmMini);
+        winPanel = new JPanel();
+        butPanel = new JPanel();
+
+        winPanel.add(win1But);
+        winPanel.add(win3But);
+
+        butPanel.add(sizeBut);
+        butPanel.add(xField);
+        butPanel.add(yField);
+        butPanel.add(autBut);
+        butPanel.add(borderBox);
+        butPanel.add(ruleField);
+        butPanel.add(startStateBox);
+        butPanel.add(miniCanvas);
+        butPanel.add(livBut);
+        butPanel.add(restBut);
+        butPanel.add(rstBut);
+
+
+        win2Panel = new JPanel();
+        win2Panel.setLayout(new BorderLayout());
+        butPanel.setLayout(new GridLayout(4,4));
+        winPanel.setLayout(new GridLayout(2,1));
+
+        win2Panel.add(BorderLayout.CENTER, win2Canvas);
+        win2Panel.add(BorderLayout.WEST, winPanel);
+        win2Panel.add(BorderLayout.EAST, butPanel);
+
+        //==============================================================================================================
+
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setContentPane(win2Panel);
+
+        this.setSize(new Dimension(1000, 700));
+        this.setLocationRelativeTo(null);
+
+
+    }
+}
