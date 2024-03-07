@@ -1,0 +1,93 @@
+package com.company;
+
+public class Main {
+
+    public static int[] tabpocz=new int[]{0,0,0,0,1,0,0,0,0};
+    public static int[] tab=new int[tabpocz.length+2];
+    public static int[] binRule=new int[8];
+    public static int[] check=new int[3];
+    public static int[] endArray=new int[tabpocz.length];
+    public static int rule=225;
+
+    public static void main(String[] args) {
+
+    System.out.println("Rule: "+rule);
+    for(int i=0;i<10;i++) {
+        addEndsToStartingArray();
+        dec2bin();
+        neighborhoodChecking();
+        for (int j=0;j<endArray.length;j++) {
+            System.out.print(endArray[j]+" ");
+        }
+        System.out.println();
+        changeArrays();
+    }
+
+        //for (int j : binRule) System.out.print(j);
+
+    }
+
+    static int[] addEndsToStartingArray(){
+        for (int i=0;i< tabpocz.length;i++) {
+            tab[i+1] = tabpocz[i];
+        }
+        tab[0]=tabpocz[tabpocz.length-1];
+        tab[tabpocz.length+1]=tabpocz[0];
+
+        return tab;
+    }
+
+    static int[] neighborhoodChecking() {
+        int sum=0;
+        //System.out.println();
+
+        for(int i=1;i<tab.length-1;i++){
+            check[0]=tab[i-1];
+            check[1]=tab[i];
+            check[2]=tab[i+1];
+
+            sum=bin2Dec(check);
+
+            endArray[i-1]=binRule[sum];
+        }
+        return endArray;
+    }
+
+    static void changeArrays(){
+        for(int i=0; i< endArray.length;i++) {
+            tabpocz[i] = endArray[i];
+            endArray[i]=0;
+        }
+    }
+
+    static int[] dec2bin(){
+
+        int count = 7;
+        while(rule != 0){
+            binRule[count] = rule % 2;
+            count--;
+
+            rule /= 2;
+        }
+
+        //for(int i = 0; i < 8; i++)
+        //    System.out.print(binRule[i]);
+        return binRule;
+    }
+
+    static int bin2Dec(int[] bin){
+
+        int dec = 0;
+
+        for(int i = 0; i < bin.length; i++){
+
+            //System.out.println(bin[i]);
+            dec += bin[i] * Math.pow(2, (bin.length-i-1));
+
+        }
+
+        //System.out.println(dec);
+
+        return dec;
+    }
+}
